@@ -1,3 +1,5 @@
+Forked from the University of Helsinki [Haskell MOOC](https://github.com/moocfi/haskell-mooc) repo for me to work on the exercises. Go to the original repo if you're looking to do the course youself.
+
 # Haskell MOOC
 
 <p align="center"><img alt="Course logo" src="img/haskell-mooc-logo.svg" width="400" align="center"></p>
