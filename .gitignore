@@ -2,3 +2,5 @@
 *.lock
 .stack-work
 score.json
+
+exercises/testing_in_ghci.hs
