@@ -113,14 +113,18 @@ isZero _ = False
 -- computes the sum 1+2+...+n
 
 sumTo :: Integer -> Integer
-sumTo = todo
+sumTo 1 = 1
+sumTo x | x < 1 = -1 -- should we sum 1+0+-1+...+n? Maybe not so let's just ignore this case.
+sumTo x = x + sumTo(x-1)
 
 ------------------------------------------------------------------------------
 -- Ex 10: power n k should compute n to the power k (i.e. n^k)
 -- Use recursion.
 
 power :: Integer -> Integer -> Integer
-power = todo
+power n 0 = 1
+power n k | k < 0 = 1 -- result would not be an integer so let's guard
+power n k = n * power n (k-1)
 
 ------------------------------------------------------------------------------
 -- Ex 11: ilog3 n should be the number of times you can divide given
@@ -139,4 +143,6 @@ power = todo
 --   ilog3 7 ==> 2
 
 ilog3 :: Integer -> Integer
-ilog3 = todo
+ilog3 0 = 0
+ilog3 n | n < 0 = -1 -- negative number `div` 3 will always be negative so the actual answer is inf
+ilog3 n = 1 + ilog3(n `div` 3)
