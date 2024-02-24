@@ -47,19 +47,26 @@ readNames s =
 -- (NB! There are obviously other corner cases like the inputs " " and
 -- "a b c", but you don't need to worry about those here)
 split :: String -> Maybe (String,String)
-split = todo
+split "" = Nothing
+split s = case words s of (x:[]) -> Nothing
+                          ls -> Just (ls!!0, ls!!1)
 
 -- checkNumber should take a pair of two strings and return them
 -- unchanged if they don't contain numbers. Otherwise Nothing is
 -- returned.
 checkNumber :: (String, String) -> Maybe (String, String)
-checkNumber = todo
+checkNumber (s1,s2) = case helper s1 || helper s2 of True -> Nothing
+                                                     _ -> Just (s1,s2)
+  where helper s = any id $ map Data.Char.isDigit s
 
 -- checkCapitals should take a pair of two strings and return them
 -- unchanged if both start with a capital letter. Otherwise Nothing is
 -- returned.
 checkCapitals :: (String, String) -> Maybe (String, String)
-checkCapitals (for,sur) = todo
+checkCapitals (for,sur) = case helper for && helper sur of False -> Nothing
+                                                           _ -> Just (for,sur)
+  where helper "" = False
+        helper (x:_) = x == toUpper x
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given a list of players and their scores (as [(String,Int)]),
@@ -86,7 +93,15 @@ checkCapitals (for,sur) = todo
 --     ==> Just "a"
 
 winner :: [(String,Int)] -> String -> String -> Maybe String
-winner scores player1 player2 = todo
+winner scores p1 p2 =
+  getScores scores p1 p2
+  >>=
+  getHigher
+  where getScores scores p1 p2 = case (lookup p1 scores, lookup p2 scores)
+                                 of ((Just s1), (Just s2)) -> Just (s1,s2)
+                                    _ -> Nothing
+        getHigher (s1,s2) | s1>=s2 = Just p1
+                          | otherwise = Just p2
 
 ------------------------------------------------------------------------------
 -- Ex 3: given a list of indices and a list of values, return the sum
@@ -104,7 +119,15 @@ winner scores player1 player2 = todo
 --    Nothing
 
 selectSum :: Num a => [a] -> [Int] -> Maybe a
-selectSum xs is = todo
+selectSum xs [] = Just 0
+selectSum xs (i:is) =
+  getVal xs i
+  >>=
+  addRest
+  where getVal xs i | i<0 || i>=length xs = Nothing
+                    | otherwise = Just (xs!!i)
+        addRest val = case selectSum xs is of Just s -> Just (val+s)
+                                              _ -> Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Here is the Logger monad from the course material. Implement
@@ -138,7 +161,10 @@ instance Applicative Logger where
   (<*>) = ap
 
 countAndLog :: Show a => (a -> Bool) -> [a] -> Logger Int
-countAndLog = todo
+countAndLog _ [] = Logger [] 0
+countAndLog f (x:xs) | f x = helper (Logger [show x] 1) (countAndLog f xs)
+                     | otherwise = countAndLog f xs
+                        where helper (Logger ls x) (Logger ms y) = Logger (ls++ms) (x+y)
 
 ------------------------------------------------------------------------------
 -- Ex 5: You can find the Bank and BankOp code from the course
@@ -155,7 +181,7 @@ exampleBank :: Bank
 exampleBank = (Bank (Map.fromList [("harry",10),("cedric",7),("ginny",1)]))
 
 balance :: String -> BankOp Int
-balance accountName = todo
+balance accountName = BankOp (\(Bank bankmap) -> (Map.findWithDefault 0 accountName bankmap, (Bank bankmap)))
 
 ------------------------------------------------------------------------------
 -- Ex 6: Using the operations balance, withdrawOp and depositOp, and
@@ -173,7 +199,12 @@ balance accountName = todo
 --     ==> ((),Bank (fromList [("cedric",7),("ginny",1),("harry",10)]))
 
 rob :: String -> String -> BankOp ()
-rob from to = todo
+rob from to =
+  balance from
+  +>
+  withdrawOp from
+  +>
+  depositOp to
 
 ------------------------------------------------------------------------------
 -- Ex 7: using the State monad, write the operation `update` that first
