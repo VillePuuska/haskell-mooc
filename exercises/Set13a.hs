@@ -162,9 +162,11 @@ instance Applicative Logger where
 
 countAndLog :: Show a => (a -> Bool) -> [a] -> Logger Int
 countAndLog _ [] = Logger [] 0
-countAndLog f (x:xs) | f x = helper (Logger [show x] 1) (countAndLog f xs)
-                     | otherwise = countAndLog f xs
-                        where helper (Logger ls x) (Logger ms y) = Logger (ls++ms) (x+y)
+countAndLog f (x:xs) = currLogger >>= helper
+  where currLogger | f x = Logger [show x] 1
+                   | otherwise = Logger [] 0
+        helper x = let (Logger ls y) = countAndLog f xs
+                   in Logger ls (x+y)
 
 ------------------------------------------------------------------------------
 -- Ex 5: You can find the Bank and BankOp code from the course
