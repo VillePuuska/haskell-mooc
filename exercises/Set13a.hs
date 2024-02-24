@@ -219,7 +219,7 @@ rob from to =
 --    ==> ((),7)
 
 update :: State Int ()
-update = todo
+update = modify (\x -> 2*x+1)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Checking that parentheses are balanced with the State monad.
@@ -247,7 +247,12 @@ update = todo
 --   parensMatch "(()))("      ==> False
 
 paren :: Char -> State Int ()
-paren = todo
+paren c = do
+  curr <- get
+  if curr < 0 then return ()
+  else if c == '(' then modify (+1)
+  else if c == ')' then modify (\x -> x-1)
+  else return ()
 
 parensMatch :: String -> Bool
 parensMatch s = count == 0
@@ -278,7 +283,10 @@ parensMatch s = count == 0
 -- PS. The order of the list of pairs doesn't matter
 
 count :: Eq a => a -> State [(a,Int)] ()
-count x = todo
+count x = do
+  curr <- get
+  case lookup x curr of Nothing -> put ((x,1):curr)
+                        Just c -> put ((x,c+1) : delete (x,c) curr)
 
 ------------------------------------------------------------------------------
 -- Ex 10: Implement the operation occurrences, which
@@ -300,4 +308,9 @@ count x = todo
 --    ==> (4,[(2,1),(3,1),(4,1),(7,1)])
 
 occurrences :: (Eq a) => [a] -> State [(a,Int)] Int
-occurrences xs = todo
+occurrences [] = return 0
+occurrences (x:xs) = do
+  count x
+  occurrences xs
+  curr <- get
+  return $ length curr
