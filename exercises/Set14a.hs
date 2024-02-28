@@ -28,7 +28,10 @@ import qualified Data.ByteString.Lazy as BL
 --  greetText (T.pack "Benedict Cumberbatch") ==> "Hello, Benedict Cumber...!"
 
 greetText :: T.Text -> T.Text
-greetText = todo
+greetText t
+    | T.length t > 15 = T.concat [greet, (T.take 15 t), (T.pack "...!")]
+    | otherwise = T.concat [greet, t, (T.pack "!")]
+    where greet = T.pack "Hello, "
 
 ------------------------------------------------------------------------------
 -- Ex 2: Capitalize every second word of a Text.
@@ -40,7 +43,10 @@ greetText = todo
 --     ==> "WORD"
 
 shout :: T.Text -> T.Text
-shout = todo
+shout t = T.unwords $ capEveryOther 0 $ T.words t
+    where capEveryOther _ [] = []
+          capEveryOther n (x:xs) | n==0 = T.map toUpper x : capEveryOther 1 xs
+                                 | otherwise = x : capEveryOther 0 xs
 
 ------------------------------------------------------------------------------
 -- Ex 3: Find the longest sequence of a single character repeating in
@@ -51,7 +57,13 @@ shout = todo
 --   longestRepeat (T.pack "aabbbbccc") ==> 4
 
 longestRepeat :: T.Text -> Int
-longestRepeat = todo
+longestRepeat t | T.null t = 0
+                | otherwise = helper 1 0 'a' t
+                where helper prevMax currCount currChar t
+                        | T.null t = prevMax
+                        | otherwise = let (Just (c,rem)) = T.uncons t
+                                      in if c==currChar then helper (max prevMax (1+currCount)) (1+currCount) currChar rem
+                                         else helper prevMax 1 c rem
 
 ------------------------------------------------------------------------------
 -- Ex 4: Given a lazy (potentially infinite) Text, extract the first n
@@ -64,7 +76,7 @@ longestRepeat = todo
 --   takeStrict 15 (TL.pack (cycle "asdf"))  ==>  "asdfasdfasdfasd"
 
 takeStrict :: Int64 -> TL.Text -> T.Text
-takeStrict = todo
+takeStrict n t = TL.toStrict $ TL.take n t
 
 ------------------------------------------------------------------------------
 -- Ex 5: Find the difference between the largest and smallest byte
@@ -76,7 +88,8 @@ takeStrict = todo
 --   byteRange (B.pack [3]) ==> 0
 
 byteRange :: B.ByteString -> Word8
-byteRange = todo
+byteRange b | B.null b = 0
+            | otherwise = B.maximum b - B.minimum b
 
 ------------------------------------------------------------------------------
 -- Ex 6: Compute the XOR checksum of a ByteString. The XOR checksum of
@@ -97,7 +110,7 @@ byteRange = todo
 --   xorChecksum (B.pack []) ==> 0
 
 xorChecksum :: B.ByteString -> Word8
-xorChecksum = todo
+xorChecksum b = B.foldr (\byte prev -> xor byte prev) 0 b
 
 ------------------------------------------------------------------------------
 -- Ex 7: Given a ByteString, compute how many UTF-8 characters it
