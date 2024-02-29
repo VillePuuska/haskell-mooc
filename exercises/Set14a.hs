@@ -127,7 +127,8 @@ xorChecksum b = B.foldr (\byte prev -> xor byte prev) 0 b
 --   countUtf8Chars (B.drop 1 (encodeUtf8 (T.pack "åäö"))) ==> Nothing
 
 countUtf8Chars :: B.ByteString -> Maybe Int
-countUtf8Chars = todo
+countUtf8Chars b = case (decodeUtf8' b) of (Left _) -> Nothing
+                                           (Right t) -> Just $ T.length t
 
 ------------------------------------------------------------------------------
 -- Ex 8: Given a (nonempty) strict ByteString b, generate an infinite
@@ -139,5 +140,5 @@ countUtf8Chars = todo
 --     ==> [0,1,2,2,1,0,0,1,2,2,1,0,0,1,2,2,1,0,0,1]
 
 pingpong :: B.ByteString -> BL.ByteString
-pingpong = todo
-
+pingpong b = BL.pack $ cycle (ls ++ reverse ls)
+    where ls = B.unpack b
