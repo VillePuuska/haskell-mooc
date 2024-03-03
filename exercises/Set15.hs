@@ -226,7 +226,22 @@ data Expression = Plus Arg Arg | Minus Arg Arg
   deriving (Show, Eq)
 
 parseExpression :: String -> Validation Expression
-parseExpression = todo
+parseExpression s =
+  if length ws /= 3 then invalid $ "Invalid expression: " ++ s
+  else operatorCheck <* firstCheck <* secondCheck
+  where ws = words s
+        first = ws!!0
+        second = ws!!2
+        operator = ws!!1
+        operatorCheck = check (operator=="+" || operator=="-") ("Unknown operator: " ++ operator) expr
+        firstAlpha = (length first == 1 && isAlpha (first!!0))
+        secondAlpha = (length second == 1 && isAlpha (second!!0))
+        firstCheck = check (all isDigit first) ("Invalid number: " ++ first) expr <|> check firstAlpha ("Invalid variable: " ++ first) expr
+        secondCheck = check (all isDigit second) ("Invalid number: " ++ second) expr <|> check secondAlpha ("Invalid variable: " ++ second) expr
+        firstArg = if firstAlpha then Variable (head first) else Number (read first)
+        secondArg = if secondAlpha then Variable (head second) else Number (read second)
+        expr = if operator=="+" then Plus firstArg secondArg
+               else Minus firstArg secondArg
 
 ------------------------------------------------------------------------------
 -- Ex 10: The Priced T type tracks a value of type T, and a price
@@ -251,11 +266,11 @@ data Priced a = Priced Int a
   deriving (Show, Eq)
 
 instance Functor Priced where
-  fmap = todo
+  fmap f (Priced x y) = Priced x (f y)
 
 instance Applicative Priced where
-  pure = todo
-  liftA2 = todo
+  pure x = Priced 0 x
+  liftA2 f (Priced x y) (Priced z w) = Priced (x+z) (f y w)
 
 ------------------------------------------------------------------------------
 -- Ex 11: This and the next exercise will use a copy of the
@@ -288,7 +303,7 @@ instance MyApplicative [] where
   myLiftA2 = liftA2
 
 (<#>) :: MyApplicative f => f (a -> b) -> f a -> f b
-f <#> x = todo
+f <#> x = myLiftA2 (\fn val -> fn val) f x
 
 ------------------------------------------------------------------------------
 -- Ex 12: Reimplement fmap using liftA2 and pure. In practical terms,
@@ -305,7 +320,7 @@ f <#> x = todo
 --  myFmap negate [1,2,3]  ==> [-1,-2,-3]
 
 myFmap :: MyApplicative f => (a -> b) -> f a -> f b
-myFmap = todo
+myFmap fn val = myPure fn <#> val
 
 ------------------------------------------------------------------------------
 -- Ex 13: Given a function that returns an Alternative value, and a
@@ -332,7 +347,8 @@ myFmap = todo
 --       ==> Errors ["zero","zero","zero"]
 
 tryAll :: Alternative f => (a -> f b) -> [a] -> f b
-tryAll = todo
+tryAll fn [] = empty
+tryAll fn (x:xs) = fn x <|> tryAll fn xs
 
 ------------------------------------------------------------------------------
 -- Ex 14: Here's the type `Both` that expresses the composition of
@@ -357,7 +373,7 @@ newtype Both f g a = Both (f (g a))
   deriving Show
 
 instance (Functor f, Functor g) => Functor (Both f g) where
-  fmap = todo
+  fmap fn (Both x) = Both ((fmap . fmap) fn x)
 
 ------------------------------------------------------------------------------
 -- Ex 15: The composition of two Applicatives is also an Applicative!
@@ -385,5 +401,5 @@ instance (Functor f, Functor g) => Functor (Both f g) where
 --              Errors ["fail 1","fail 2"]]
 
 instance (Applicative f, Applicative g) => Applicative (Both f g) where
-  pure = todo
-  liftA2 = todo
+  pure x = Both (pure (pure x))
+  liftA2 fn (Both x) (Both y) = Both $ (liftA2 . liftA2) fn x y
