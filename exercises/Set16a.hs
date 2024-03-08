@@ -178,7 +178,10 @@ frequencies (x:ys) = (x, length xs) : frequencies others
 --  [2,4,10]
 
 genList :: Gen [Int]
-genList = todo
+genList = do
+  n <- choose (3,5)
+  xs <- vectorOf n (choose (0,10))
+  return $ sort xs
 
 ------------------------------------------------------------------------------
 -- Ex 7: Here are the datatypes Arg and Expression from Set 15. Write
@@ -216,7 +219,21 @@ data Expression = Plus Arg Arg | Minus Arg Arg
   deriving (Show, Eq)
 
 instance Arbitrary Arg where
-  arbitrary = todo
+  arbitrary = oneof [numberGen,variableGen]
+    where numberGen = do
+            n <- choose (0,10)
+            return $ Number n
+          variableGen = do
+            ch <- elements ['a','b','c','x','y','z']
+            return $ Variable ch
 
 instance Arbitrary Expression where
-  arbitrary = todo
+  arbitrary = oneof [plusGen,minusGen]
+    where plusGen = do
+            a1 <- arbitrary
+            a2 <- arbitrary
+            return $ Plus a1 a2
+          minusGen = do
+            a1 <- arbitrary
+            a2 <- arbitrary
+            return $ Minus a1 a2
